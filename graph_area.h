@@ -2,6 +2,7 @@
 #define GRAPH_AREA_H
 
 #include <gtkmm/drawingarea.h>
+#include <cairomm/context.h>
 
 class GraphArea : public Gtk::DrawingArea {
 
@@ -15,6 +16,7 @@ class GraphArea : public Gtk::DrawingArea {
     void set_f(double f(double));
 
     protected:
+    void draw_number(const Cairo::RefPtr<Cairo::Context>& ctx, int x, int y, double num, int axis);
     virtual bool on_draw(const Cairo::RefPtr<Cairo::Context>& ctx);
 };
 

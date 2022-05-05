@@ -8,7 +8,7 @@
 #include <math.h>
 
 double f(double x) {
-    return sin(x);
+    return cos(x) + 1000;
 }
 
 double a = -5;
@@ -24,7 +24,7 @@ int main(int argc, char * argv[]) {
     area.set_f(f);
     area.set_interval(a, b);
 
-    graph.resize(960, 960);
+    graph.resize(1010, 1010);
 
     graph.add(area);
     area.show();
