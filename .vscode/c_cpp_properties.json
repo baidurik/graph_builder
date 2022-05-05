@@ -30,7 +30,7 @@
                 "/usr/include/gdk-pixbuf-2.0",
                 "/usr/include/giomm-2.4",
                 "/usr/lib64/giomm-2.4/include",
-                "/usr/include/atk-1.0",
+                "/usr/include/atk-1.0"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/clang",
