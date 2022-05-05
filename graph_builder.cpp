@@ -5,12 +5,14 @@
 #include <gtkmm/application.h>
 #include <gtkmm/window.h>
 
+#include <math.h>
+
 double f(double x) {
-    return x * x;
+    return sin(x) + 1000;
 }
 
-double a = 0;
-double b = 1;
+double a = -5;
+double b = 5;
 
 
 int main(int argc, char * argv[]) {
@@ -22,7 +24,7 @@ int main(int argc, char * argv[]) {
     area.set_f(f);
     area.set_interval(a, b);
 
-    graph.resize(900, 900);
+    graph.resize(900, 960);
 
     graph.add(area);
     area.show();
