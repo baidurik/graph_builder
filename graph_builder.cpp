@@ -8,11 +8,11 @@
 #include <math.h>
 
 double f(double x) {
-    return cos(x) + 1000;
+    return 3*cos(x) + 2 * sin(x);
 }
 
-double a = -5;
-double b = 5;
+double a = -7.1;
+double b = -0.5;
 
 
 int main(int argc, char * argv[]) {

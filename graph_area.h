@@ -9,6 +9,8 @@ class GraphArea : public Gtk::DrawingArea {
     double (*f)(double x);
     double a, b;
 
+    double find_optimal_range(double a, double b);
+
     public:
     GraphArea();
     virtual ~GraphArea();

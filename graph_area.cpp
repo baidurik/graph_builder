@@ -20,6 +20,31 @@ void GraphArea::set_f(double _f(double)) {
     f = _f;
 }
 
+double GraphArea::find_optimal_range(double a, double b) {  // Smartly computing the interval between two strokes
+    double tenth = (b - a) / 10;
+
+    double p10_low_val = 1;
+    int p10_low = 0;
+    while (p10_low_val >= tenth) {
+        p10_low_val /= 10;
+        p10_low--;
+    }
+    while (p10_low_val <= tenth) {
+        p10_low_val *= 10;
+        p10_low++;
+    }
+    p10_low--;
+    p10_low_val /= 10;
+
+    double ans = p10_low_val;
+    if (std::abs(2 * p10_low_val - tenth) < std::abs(ans - tenth)) ans = 2 * p10_low_val;
+    if (std::abs(2.5 * p10_low_val - tenth) < std::abs(ans - tenth)) ans = 2.5 * p10_low_val;
+    if (std::abs(5 * p10_low_val - tenth) < std::abs(ans - tenth)) ans = 5 * p10_low_val;
+    if (std::abs(10 * p10_low_val - tenth) < std::abs(ans - tenth)) ans = 10 * p10_low_val;
+
+    return ans;
+}
+
 void GraphArea::draw_number(const Cairo::RefPtr<Cairo::Context>& ctx, int x, int y, double num, int axis=0) {
     Pango::FontDescription font;
 
@@ -27,8 +52,8 @@ void GraphArea::draw_number(const Cairo::RefPtr<Cairo::Context>& ctx, int x, int
     font.set_weight(Pango::WEIGHT_BOLD);
     // font.set_size(1);
 
+    num = std::round(num * 1000000) / 1000000.0;
     std::ostringstream ss;
-    ss.precision(2);
     ss << num;
 
     Glib::RefPtr<Pango::Layout> layout = create_pango_layout(ss.str());
@@ -44,6 +69,8 @@ void GraphArea::draw_number(const Cairo::RefPtr<Cairo::Context>& ctx, int x, int
 }
 
 bool GraphArea::on_draw(const Cairo::RefPtr<Cairo::Context>& ctx) {
+    const double eps = 1e-9;
+
     Gtk::Allocation allocation = get_allocation();
     const int width = allocation.get_width();
     const int height = allocation.get_height();
@@ -111,25 +138,49 @@ bool GraphArea::on_draw(const Cairo::RefPtr<Cairo::Context>& ctx) {
         ctx->line_to(x2, ox_on_canvas);
         ctx->stroke();
         ox_axis = ox_on_canvas;
+    }    
+
+    // Some strokes and labels on borders
+    // Also grid
+    // static const double dashes[] = {10};
+
+    double x_int = find_optimal_range(a, b);
+    double first_stroke_x = x_int * std::ceil(a / x_int);
+    for (double real_x = first_stroke_x; real_x <= b + eps; real_x += x_int) {     
+        double canvas_x = x1 + (real_x - a) / (b - a) * (x2 - x1);
+        ctx->set_line_width(2);
+        ctx->set_source_rgb(0, 0, 0);
+        ctx->move_to(canvas_x, y2 - 5);
+        ctx->line_to(canvas_x, y2 + 5);
+        ctx->stroke();
+
+        draw_number(ctx, canvas_x, y2, real_x, 1);
+
+        ctx->set_line_width(0.5);
+        ctx->set_source_rgb(0.6, 0.6, 0.6);
+        ctx->move_to(canvas_x, y1);
+        ctx->line_to(canvas_x, y2);
+        ctx->stroke();
     }
 
-    // Some strokes and captions on borders
-    ctx->set_source_rgb(0, 0, 0);
-    for (int canvas_x = 0; canvas_x <= x2 - x1; canvas_x += 100) {                           
-        ctx->move_to(canvas_x + x1, y2 - 5);
-        ctx->line_to(canvas_x + x1, y2 + 5);
-        ctx->stroke();
-        double real_x = a + (b - a) / (x2 - x1) * canvas_x;
+    std::cout << "ANIME\n";
+    double y_int = find_optimal_range(min_y, max_y);
+    double first_stroke_y = y_int * std::ceil(min_y / y_int);
+    for (double real_y = first_stroke_y; real_y <= max_y + eps; real_y += y_int) {
+        double canvas_y = y2 - (real_y - min_y) / scope * (y2 - y1);
+        ctx->set_line_width(2);
+        ctx->set_source_rgb(0, 0, 0);
+        ctx->move_to(x1 - 5, canvas_y);
+        ctx->line_to(x1 + 5, canvas_y);
+        ctx->stroke();      
 
-        draw_number(ctx, canvas_x + x1, y2, real_x, 1);
-    }
-    for (int canvas_y = 0; canvas_y <= y2 - y1; canvas_y += 100) {
-        ctx->move_to(x1 - 5, y2 - canvas_y);
-        ctx->line_to(x1 + 5, y2 - canvas_y);
-        ctx->stroke();
-        double real_y = min_y + (max_y - min_y) / (y2 - y1) * (y2 - y1 - canvas_y);
+        draw_number(ctx, x1, canvas_y, real_y, 0);
 
-        draw_number(ctx, x1, y2 - canvas_y, real_y, 0);
+        ctx->set_line_width(0.5);
+        ctx->set_source_rgb(0.6, 0.6, 0.6);
+        ctx->move_to(x1, canvas_y);
+        ctx->line_to(x2, canvas_y);
+        ctx->stroke();
     }
 
     return true;
