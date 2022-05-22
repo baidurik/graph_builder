@@ -5,23 +5,21 @@
 #include "graph_area.h"
 #include "graph_area.cpp"
 
-class GraphWindow : public Gtk::Window {
+double eps1 = 1e-3;
 
-    double eps1 = 1e-3, eps2 = 1e-3;
+class GraphWindow : public Gtk::Window {
 
 public:
     GraphWindow();
     virtual ~GraphWindow();
     GraphArea area;
-
-    void set_eps1(double eps1);
-    void set_eps2(double eps2);
+    double eps2 = 1e-3;
 
 protected:
 
-    //Child widgets:
     Gtk::Grid container;
-    Gtk::Grid ui;
+
+    Gtk::Grid input;
     Gtk::Entry a_entry;
     Gtk::Entry b_entry;
     Gtk::Entry x0_entry;
@@ -30,7 +28,10 @@ protected:
     Gtk::Button redraw_btn;
     Gtk::Button nxt_btn;
     Gtk::Button prv_btn;
+
+    Gtk::Grid output;
     Gtk::Entry answer_entry;
+    Gtk::Entry f_entry;
 
     void on_nxt_clicked();
     void on_prv_clicked();
