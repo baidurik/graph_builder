@@ -7,7 +7,6 @@
 
 class GraphArea : public Gtk::DrawingArea {
 
-    double (*f)(double x);
     double a, b;
     double x1, y1, x2, y2, min_y, max_y;
 
@@ -18,10 +17,13 @@ class GraphArea : public Gtk::DrawingArea {
     double find_optimal_range(double a, double b);
 
     public:
+    double (*f)(double x);
+    double (*f_stroke)(double x);
+
     GraphArea();
     virtual ~GraphArea();
     void set_interval(double a, double b);
-    void set_f(double f(double));
+    void force_redraw();
 
     std::vector<double> iter;
 

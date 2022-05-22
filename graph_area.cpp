@@ -1,3 +1,6 @@
+#ifndef GRAPH_AREA_CPP
+#define GRAPH_AREA_CPP
+
 #include "graph_area.h"
 #include <cairomm/context.h>
 
@@ -7,7 +10,9 @@
 #include <string>
 #include <sstream>
 
-GraphArea::GraphArea() {}
+GraphArea::GraphArea() {
+    set_size_request(900, 900);
+}
 GraphArea::~GraphArea() {}
 
 double GraphArea::x_real_to_canvas(double x) {
@@ -26,10 +31,6 @@ void GraphArea::set_interval(double a, double b) {
     assert(a < b);
     this->a = a;
     this->b = b;
-}
-
-void GraphArea::set_f(double _f(double)) {
-    f = _f;
 }
 
 double GraphArea::find_optimal_range(double a, double b) {  // Smartly computing the interval between two strokes
@@ -201,8 +202,20 @@ bool GraphArea::on_draw(const Cairo::RefPtr<Cairo::Context>& ctx) {
         ctx->line_to(x_real_to_canvas(iter[i]), axis_pos);
         ctx->line_to(x_real_to_canvas(iter[i]), y_real_to_canvas(f(iter[i])));
     }
-
+   
     ctx->stroke();
 
     return true;
 }
+
+void GraphArea::force_redraw()
+{
+    Glib::RefPtr<Gdk::Window> win = get_window();
+    if (win) {
+        Gdk::Rectangle r(0, 0, get_allocation().get_width(), get_allocation().get_height());
+        win->invalidate_rect(r, false);
+    }
+}
+
+
+#endif
