@@ -14,6 +14,9 @@ public:
     virtual ~GraphWindow();
     GraphArea area;
 
+    void set_eps1(double eps1);
+    void set_eps2(double eps2);
+
 protected:
 
     //Child widgets:
@@ -27,9 +30,11 @@ protected:
     Gtk::Button redraw_btn;
     Gtk::Button nxt_btn;
     Gtk::Button prv_btn;
+    Gtk::Entry answer_entry;
 
     void on_nxt_clicked();
     void on_prv_clicked();
+    void on_redraw_clicked();
 };
 
 #endif
