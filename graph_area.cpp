@@ -10,6 +10,18 @@
 GraphArea::GraphArea() {}
 GraphArea::~GraphArea() {}
 
+double GraphArea::x_real_to_canvas(double x) {
+    return x1 + (x - a) / (b - a) * (x2 - x1);
+}
+
+double GraphArea::x_canvas_to_real(double x) {
+    return a + (b - a)  / (x2 - x1) * x;
+}
+
+double GraphArea::y_real_to_canvas(double y) {
+    return y2 - (y - min_y) / (max_y - min_y) * (y2 - y1);
+}
+
 void GraphArea::set_interval(double a, double b) {
     assert(a < b);
     this->a = a;
@@ -82,27 +94,24 @@ bool GraphArea::on_draw(const Cairo::RefPtr<Cairo::Context>& ctx) {
     ctx->fill();
 
     // Draw borders
-    int x1 = 90, y1 = 20, x2 = width - 20, y2 = height - 90;
+    x1 = 90, y1 = 20, x2 = width - 20, y2 = height - 90;
     ctx->set_line_width(2);
     ctx->set_source_rgb(0, 0, 0);
     ctx->rectangle(x1, y1, x2 - x1, y2 - y1);
     ctx->stroke();
 
     // Find min and max value of f(x) on the given interval
-    double max_y = f(a);
-    double min_y = f(a);
+    max_y = f(a);
+    min_y = f(a);
 
     for (int canvas_x = 0; canvas_x < (x2 - x1); canvas_x++) {
-        double real_x = a + (b - a)  / (x2 - x1) * canvas_x;           
+        double real_x = x_canvas_to_real(canvas_x);           
         max_y = std::max(max_y, f(real_x));
         min_y = std::min(min_y, f(real_x));
     }
 
-    double scope = max_y - min_y;
-
     // If function is a horizontal line
-    if (scope == 0) {
-        scope = 2;
+    if (max_y == min_y) {
         max_y++;                                                                                               
         min_y--;
     }
@@ -110,13 +119,13 @@ bool GraphArea::on_draw(const Cairo::RefPtr<Cairo::Context>& ctx) {
     // Drawing the graph
     ctx->set_line_width(2);
     ctx->set_source_rgb(1, 0, 0);
-    double y0 = y2 - (f(a) - min_y) / scope * (y2 - y1);
+    double y0 = y_real_to_canvas(f(a));
     ctx->move_to(x1, y0);
     for (int canvas_x = 0; canvas_x < (x2 - x1); canvas_x++) {      
-        double real_x = a + (b - a) / (x2 - x1) * canvas_x;
+        double real_x = x_canvas_to_real(canvas_x);
         double real_y = f(real_x);
-        double canvas_y = (y2 - y1) - (real_y - min_y) / scope * (y2 - y1);
-        ctx->line_to(x1 + canvas_x, y1 + canvas_y);
+        double canvas_y = y_real_to_canvas(real_y);
+        ctx->line_to(x1 + canvas_x, canvas_y);
     }
     ctx->stroke();
 
@@ -124,7 +133,7 @@ bool GraphArea::on_draw(const Cairo::RefPtr<Cairo::Context>& ctx) {
     ctx->set_source_rgb(0, 0, 0);
     int oy_axis = x1;
     if (a <= 0 && 0 <= b) {
-        double oy_on_canvas = x1 + (0 - a) / (b - a) * (x2 - x1);
+        double oy_on_canvas = x_real_to_canvas(0);
         ctx->move_to(oy_on_canvas, y1);
         ctx->line_to(oy_on_canvas, y2);
         ctx->stroke();
@@ -133,7 +142,7 @@ bool GraphArea::on_draw(const Cairo::RefPtr<Cairo::Context>& ctx) {
 
     int ox_axis = y2;
     if (min_y <= 0 && 0 <= max_y) {
-        double ox_on_canvas = y2 - (0 - min_y) / scope * (y2 - y1);
+        double ox_on_canvas = y_real_to_canvas(0);
         ctx->move_to(x1, ox_on_canvas);
         ctx->line_to(x2, ox_on_canvas);
         ctx->stroke();
@@ -142,12 +151,11 @@ bool GraphArea::on_draw(const Cairo::RefPtr<Cairo::Context>& ctx) {
 
     // Some strokes and labels on borders
     // Also grid
-    // static const double dashes[] = {10};
 
     double x_int = find_optimal_range(a, b);
     double first_stroke_x = x_int * std::ceil(a / x_int);
     for (double real_x = first_stroke_x; real_x <= b + eps; real_x += x_int) {     
-        double canvas_x = x1 + (real_x - a) / (b - a) * (x2 - x1);
+        double canvas_x = x_real_to_canvas(real_x);
         ctx->set_line_width(2);
         ctx->set_source_rgb(0, 0, 0);
         ctx->move_to(canvas_x, y2 - 5);
@@ -163,11 +171,10 @@ bool GraphArea::on_draw(const Cairo::RefPtr<Cairo::Context>& ctx) {
         ctx->stroke();
     }
 
-    std::cout << "ANIME\n";
     double y_int = find_optimal_range(min_y, max_y);
     double first_stroke_y = y_int * std::ceil(min_y / y_int);
     for (double real_y = first_stroke_y; real_y <= max_y + eps; real_y += y_int) {
-        double canvas_y = y2 - (real_y - min_y) / scope * (y2 - y1);
+        double canvas_y = y_real_to_canvas(real_y);
         ctx->set_line_width(2);
         ctx->set_source_rgb(0, 0, 0);
         ctx->move_to(x1 - 5, canvas_y);
@@ -182,6 +189,20 @@ bool GraphArea::on_draw(const Cairo::RefPtr<Cairo::Context>& ctx) {
         ctx->line_to(x2, canvas_y);
         ctx->stroke();
     }
+
+    // Animating Newton method
+
+    ctx->set_source_rgb(0, 0, 1);
+    ctx->set_line_width(1);
+    double axis_pos = y_real_to_canvas(0);
+    ctx->move_to(x_real_to_canvas(iter[0]), axis_pos);
+    ctx->line_to(x_real_to_canvas(iter[0]), y_real_to_canvas(f(iter[0])));
+    for (int i = 1; i < (int)iter.size(); i++) {
+        ctx->line_to(x_real_to_canvas(iter[i]), axis_pos);
+        ctx->line_to(x_real_to_canvas(iter[i]), y_real_to_canvas(f(iter[i])));
+    }
+
+    ctx->stroke();
 
     return true;
 }

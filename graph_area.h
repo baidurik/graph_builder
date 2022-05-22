@@ -3,11 +3,17 @@
 
 #include <gtkmm/drawingarea.h>
 #include <cairomm/context.h>
+#include <vector>
 
 class GraphArea : public Gtk::DrawingArea {
 
     double (*f)(double x);
     double a, b;
+    double x1, y1, x2, y2, min_y, max_y;
+
+    double x_real_to_canvas(double x);
+    double x_canvas_to_real(double x);
+    double y_real_to_canvas(double y);
 
     double find_optimal_range(double a, double b);
 
@@ -16,6 +22,8 @@ class GraphArea : public Gtk::DrawingArea {
     virtual ~GraphArea();
     void set_interval(double a, double b);
     void set_f(double f(double));
+
+    std::vector<double> iter;
 
     protected:
     void draw_number(const Cairo::RefPtr<Cairo::Context>& ctx, int x, int y, double num, int axis);
